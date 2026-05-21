@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Custom Details Accordion</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 40px;
+      background: #111;
+      color: #fff;
+    }
+
+    details {
+      max-width: 500px;
+      margin-bottom: 10px;
+      border-radius: 10px;
+      background: #1e1e1e;
+      overflow: hidden;
+    }
+
+    /* REMOVE DEFAULT ARROW */
+    summary {
+      list-style: none;
+      cursor: pointer;
+      padding: 15px;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    summary::-webkit-details-marker {
+      display: none;
+    }
+
+    /* CUSTOM ICON */
+    summary::before {
+      content: "▶";
+      transition: transform 0.3s ease;
+    }
+
+    details[open] summary::before {
+      transform: rotate(90deg);
+    }
+
+    /* CONTENT */
+    .content {
+      padding: 0 15px 15px;
+      line-height: 1.5;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-5px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <h2>Custom Accordion (No Default Icon)</h2>
+
+  <details>
+    <summary>What is HTML?</summary>
+    <div class="content">
+      HTML stands for HyperText Markup Language. It is used to structure web pages.
+    </div>
+  </details>
+
+  <details>
+    <summary>What is CSS?</summary>
+    <div class="content">
+      CSS is used to style and design web pages, like colors, layouts, and animations.
+    </div>
+  </details>
+
+  <details>
+    <summary>What is JavaScript?</summary>
+    <div class="content">
+      JavaScript makes web pages interactive and dynamic.
+    </div>
+  </details>
+
+</body>
+</html>
