@@ -40,6 +40,21 @@ body {
   color:white;
 }
 
+summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+summary::after {
+  content: ">"; /* closed state */
+  transition: transform 0.2s ease;
+}
+details[open] summary::after {
+  transform: rotate(90deg);
+}
+
 .sidebar-scrollable {
   height: 100%;             /* full height of sidebar */
   overflow-y: auto;         /* make it scrollable */

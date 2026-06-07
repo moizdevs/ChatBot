@@ -1,15 +1,19 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { pipeline } from "@xenova/transformers";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 const generateEmbeddings = async (message) => {
-  const model = genAI.getGenerativeModel({
-    model: "gemini-embedding-001",
-  });
-  const data = await model.embedContent(message);
-  return data.embedding.values;
+  const extractor = await pipeline(
+    "feature-extraction",
+    "Xenova/all-MiniLM-L6-v2",
+  );
+
+  const output = await extractor(message, { pooling: "mean", normalize: true });
+
+  return output.data;
 };
 
 async function getRelevantMemories(userId, message) {
@@ -159,7 +163,6 @@ export async function POST(req) {
       { role: "user", parts: [{ text: memoryContext + message }] },
     ];
     console.log(finalMessages);
-    
 
     const model = genAI.getGenerativeModel({
       model: "gemini-2.5-flash",

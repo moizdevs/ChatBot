@@ -11,6 +11,7 @@ import {
   ThumbsUp,
   ThumbsDown,
   Copy,
+  EllipsisVertical,
   X,
   Check,
   Ellipsis,
@@ -39,8 +40,9 @@ const Home = () => {
   const sidebarRef = useRef(null); // add this
   const pageRef = useRef(1);
   const hasMoreRef = useRef(true); // ADD
-  const isFetchingRef = useRef(false); // ADD
-  const [page, setPage] = useState(1);
+  const isFetchingRef = useRef(false); // Add
+  const [isFetching, setIsFetching] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const fetchChatsHistory = async (userId) => {
     if (!userId) return;
@@ -48,6 +50,7 @@ const Home = () => {
     if (isFetchingRef.current) return; // ADD - duplicate call rokko
 
     isFetchingRef.current = true; // ADD
+    setIsFetching(true);
 
     const req = await fetch(`/api/chat/all/${userId}?page=${pageRef.current}`);
     const res = await req.json();
@@ -63,6 +66,7 @@ const Home = () => {
       });
     }
 
+    setIsFetching(false);
     isFetchingRef.current = false; // ADD
   };
 
@@ -146,7 +150,6 @@ const Home = () => {
           if (isAtBottom && hasMoreRef.current && !isFetchingRef.current) {
             // CHANGE
             pageRef.current += 1;
-            setPage(pageRef.current);
             fetchChatsHistory(session?.user?.id);
           }
         }}
@@ -205,30 +208,100 @@ const Home = () => {
               <summary className="text-xs text-gray-400 px-3 mb-1 tracking-wide">
                 Your chats
               </summary>
-              <ul className="flex flex-col">
-                {chatList.map((chat) => (
-                  <li
-                    key={chat.id}
-                    onClick={() => {
-                      setChatId(chat.id);
-                      document.title = `${toTitleCase(chat.title)}`;
-                      fetch(`/api/chat/${chat.id}`)
-                        .then((res) => res.json())
-                        .then((data) => {
-                          setMessages(data.messages);
-                        });
-                    }}
-                    className={`px-3 py-2 text-sm rounded-xl cursor-pointer truncate transition-colors ${
-                      chat.id === chatId
-                        ? "bg-[#E8E8E8] dark:bg-[#242424]"
-                        : "hover:bg-[#EFEFEF] dark:hover:bg-[#303030]"
-                    }`}
-                    title={chat.title}
-                  >
-                    {toTitleCase(chat.title) || "New Chat"}
-                  </li>
-                ))}
-              </ul>
+              {isFetching ? (
+                <ul className="flex flex-col gap-2">
+                  {Array.from({ length: 10 }).map((_, index) => (
+                    <li
+                      key={index}
+                      className="h-9 rounded-xl bg-gray-200 dark:bg-gray-700 animate-pulse"
+                    ></li>
+                  ))}
+                </ul>
+              ) : (
+                <ul className="flex flex-col">
+                  {chatList.map((chat) => (
+                    <li
+                      key={chat.id}
+                      onClick={() => {
+                        setChatId(chat.id);
+                        document.title = `${toTitleCase(chat.title)}`;
+                        fetch(`/api/chat/${chat.id}`)
+                          .then((res) => res.json())
+                          .then((data) => {
+                            setMessages(data.messages);
+                          });
+                      }}
+                      className={`group pl-3 pr-8 relative py-2 text-sm rounded-xl cursor-pointer truncate transition-colors ${
+                        chat.id === chatId
+                          ? "bg-[#E8E8E8] dark:bg-[#242424]"
+                          : "hover:bg-[#EFEFEF] dark:hover:bg-[#303030]"
+                      }`}
+                      title={chat.title}
+                    >
+                      {toTitleCase(chat.title) || "New Chat"}
+
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowDeleteDialog(true);
+                        }}
+                        className="absolute cursor-pointer right-0 top-0 h-full w-7 hidden group-hover:flex items-center justify-center rounded hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
+                      >
+                        <EllipsisVertical size={16} />
+                      </button>
+
+                      {/* Delete confirmation dialog — rendered outside the button, e.g. at page root via portal */}
+                      {showDeleteDialog && (
+                        <div
+                          className="fixed inset-0 z-50 flex items-center justify-center bg-[#fff0] dark:bg-[#00000000] backdrop-blur-md"
+                          onClick={() => setShowDeleteDialog(false)} // close on backdrop click
+                        >
+                          <div
+                            className="bg-white dark:bg-[#181818] rounded-xl shadow-xl p-6 w-80 flex flex-col gap-5"
+                            onClick={(e) => e.stopPropagation()} // prevent closing when clicking inside
+                          >
+                            <div className="flex flex-col gap-1">
+                              <p className="text-base font-semibold">
+                                Delete chat?
+                              </p>
+                              <p className="text-sm text-gray-500 dark:text-gray-400">
+                                This action cannot be undone.
+                              </p>
+                            </div>
+                            <div className="flex gap-3 justify-end">
+                              <button
+                                onClick={() => setShowDeleteDialog(false)}
+                                className="px-4 cursor-pointer py-2 text-sm rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                              >
+                                Cancel
+                              </button>
+                              <button
+                                onClick={async () => {
+                                  await fetch(`/api/chat/${chat.id}`, {
+                                    method: "DELETE",
+                                  });
+                                  setChatList((prev) =>
+                                    prev.filter((c) => c.id !== chat.id),
+                                  );
+                                  if (chatId === chat.id) {
+                                    setChatId(null);
+                                    setMessages([]);
+                                    document.title = "ChatNova";
+                                  }
+                                  setShowDeleteDialog(false);
+                                }}
+                                className="px-4 cursor-pointer py-2 text-sm rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors"
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              )}
             </details>
           </div>
         )}
@@ -243,13 +316,13 @@ const Home = () => {
             <div className="flex gap-2">
               <img
                 className="w-9 h-9 rounded-full shrink-0"
-                src={session.user.image || "/default-avatar.png"}
+                src={session?.user?.image || "/default-avatar.png"}
                 alt="Rounded avatar"
               />
               {!collapsed && (
                 <div className="flex flex-col">
                   <span className="text-xs text-foreground">
-                    {session.user.name}
+                    {session?.user?.name}
                   </span>
                   <span className="text-xs text-gray-500">Free</span>
                 </div>
@@ -323,7 +396,6 @@ const Home = () => {
                 <li
                   key={chat.id}
                   onClick={() => {
-                    setmobileSidebar(false);
                     setChatId(chat.id);
                     document.title = `${toTitleCase(chat.title)}`;
                     fetch(`/api/chat/${chat.id}`)
@@ -332,7 +404,7 @@ const Home = () => {
                         setMessages(data.messages);
                       });
                   }}
-                  className={`px-3 py-2 text-sm rounded-xl cursor-pointer truncate transition-colors ${
+                  className={`group pl-3 pr-8 relative py-2 text-sm rounded-xl cursor-pointer truncate transition-colors ${
                     chat.id === chatId
                       ? "bg-[#E8E8E8] dark:bg-[#242424]"
                       : "hover:bg-[#EFEFEF] dark:hover:bg-[#303030]"
@@ -340,6 +412,65 @@ const Home = () => {
                   title={chat.title}
                 >
                   {toTitleCase(chat.title) || "New Chat"}
+
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowDeleteDialog(true);
+                    }}
+                    className="absolute cursor-pointer right-0 top-0 h-full w-7 hidden group-hover:flex items-center justify-center rounded hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
+                  >
+                    <EllipsisVertical size={16} />
+                  </button>
+
+                  {/* Delete confirmation dialog — rendered outside the button, e.g. at page root via portal */}
+                  {showDeleteDialog && (
+                    <div
+                      className="fixed inset-0 z-50 flex items-center justify-center bg-[#fff0] dark:bg-[#00000000] backdrop-blur-md"
+                      onClick={() => setShowDeleteDialog(false)} // close on backdrop click
+                    >
+                      <div
+                        className="bg-white dark:bg-[#181818] rounded-xl shadow-xl p-6 w-80 flex flex-col gap-5"
+                        onClick={(e) => e.stopPropagation()} // prevent closing when clicking inside
+                      >
+                        <div className="flex flex-col gap-1">
+                          <p className="text-base font-semibold">
+                            Delete chat?
+                          </p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                            This action cannot be undone.
+                          </p>
+                        </div>
+                        <div className="flex gap-3 justify-end">
+                          <button
+                            onClick={() => setShowDeleteDialog(false)}
+                            className="px-4 cursor-pointer py-2 text-sm rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            onClick={async () => {
+                              await fetch(`/api/chat/${chat.id}`, {
+                                method: "DELETE",
+                              });
+                              setChatList((prev) =>
+                                prev.filter((c) => c.id !== chat.id),
+                              );
+                              if (chatId === chat.id) {
+                                setChatId(null);
+                                setMessages([]);
+                                document.title = "ChatNova";
+                              }
+                              setShowDeleteDialog(false);
+                            }}
+                            className="px-4 cursor-pointer py-2 text-sm rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </li>
               ))}
             </ul>
