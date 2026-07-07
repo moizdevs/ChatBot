@@ -231,7 +231,7 @@ const Home = () => {
                             setMessages(data.messages);
                           });
                       }}
-                      className={`group pl-3 pr-8 relative py-2 text-sm rounded-xl cursor-pointer truncate transition-colors ${
+                      className={`group pl-3 pr-8 relative py-2 text-sm rounded-full cursor-pointer truncate transition-colors ${
                         chat.id === chatId
                           ? "bg-[#E8E8E8] dark:bg-[#242424]"
                           : "hover:bg-[#EFEFEF] dark:hover:bg-[#303030]"
@@ -253,16 +253,20 @@ const Home = () => {
                       {/* Delete confirmation dialog — rendered outside the button, e.g. at page root via portal */}
                       {showDeleteDialog && (
                         <div
-                          className="fixed inset-0 z-50 flex items-center justify-center bg-[#fff0] dark:bg-[#00000000] backdrop-blur-md"
+                          className="fixed inset-0 z-50 bg-[#ffffff13] dark:bg-[#1111111c] flex items-center justify-center"
                           onClick={() => setShowDeleteDialog(false)} // close on backdrop click
                         >
                           <div
-                            className="bg-white dark:bg-[#181818] rounded-xl shadow-xl p-6 w-80 flex flex-col gap-5"
+                            className="bg-white dark:bg-[#181818] rounded-xl shadow-md p-6 min-w-80 flex flex-col gap-5"
                             onClick={(e) => e.stopPropagation()} // prevent closing when clicking inside
                           >
                             <div className="flex flex-col gap-1">
                               <p className="text-base font-semibold">
                                 Delete chat?
+                              </p>
+                              <p className="text-sm text-gray-500 dark:text-gray-400">
+                                This will delete{" "}
+                                <span className="font-bold text-gray-200">{chat.title}</span>
                               </p>
                               <p className="text-sm text-gray-500 dark:text-gray-400">
                                 This action cannot be undone.
@@ -271,7 +275,7 @@ const Home = () => {
                             <div className="flex gap-3 justify-end">
                               <button
                                 onClick={() => setShowDeleteDialog(false)}
-                                className="px-4 cursor-pointer py-2 text-sm rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                                className="px-4 cursor-pointer py-2 text-sm rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
                               >
                                 Cancel
                               </button>
@@ -290,7 +294,7 @@ const Home = () => {
                                   }
                                   setShowDeleteDialog(false);
                                 }}
-                                className="px-4 cursor-pointer py-2 text-sm rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors"
+                                className="px-4 cursor-pointer py-2 text-sm rounded-full bg-[#ff002a] text-white hover:bg-[#911e1b] transition-colors"
                               >
                                 Delete
                               </button>
@@ -387,94 +391,115 @@ const Home = () => {
 
           {/* Chat History */}
 
-          <div className="flex-1 overflow-y-auto mb-25 mx-1">
-            <p className="text-xs text-gray-400 px-3 mb-1 tracking-wide">
-              Your chats
-            </p>
-            <ul className="flex flex-col">
-              {chatList.map((chat) => (
-                <li
-                  key={chat.id}
-                  onClick={() => {
-                    setChatId(chat.id);
-                    document.title = `${toTitleCase(chat.title)}`;
-                    fetch(`/api/chat/${chat.id}`)
-                      .then((res) => res.json())
-                      .then((data) => {
-                        setMessages(data.messages);
-                      });
-                  }}
-                  className={`group pl-3 pr-8 relative py-2 text-sm rounded-xl cursor-pointer truncate transition-colors ${
-                    chat.id === chatId
-                      ? "bg-[#E8E8E8] dark:bg-[#242424]"
-                      : "hover:bg-[#EFEFEF] dark:hover:bg-[#303030]"
-                  }`}
-                  title={chat.title}
-                >
-                  {toTitleCase(chat.title) || "New Chat"}
-
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setShowDeleteDialog(true);
-                    }}
-                    className="absolute cursor-pointer right-0 top-0 h-full w-7 hidden group-hover:flex items-center justify-center rounded hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
-                  >
-                    <EllipsisVertical size={16} />
-                  </button>
-
-                  {/* Delete confirmation dialog — rendered outside the button, e.g. at page root via portal */}
-                  {showDeleteDialog && (
-                    <div
-                      className="fixed inset-0 z-50 flex items-center justify-center bg-[#fff0] dark:bg-[#00000000] backdrop-blur-md"
-                      onClick={() => setShowDeleteDialog(false)} // close on backdrop click
-                    >
-                      <div
-                        className="bg-white dark:bg-[#181818] rounded-xl shadow-xl p-6 w-80 flex flex-col gap-5"
-                        onClick={(e) => e.stopPropagation()} // prevent closing when clicking inside
+          {!collapsed && (
+            <div className="flex-1 overflow-y-auto mb-25 mx-1">
+              <details open>
+                <summary className="text-xs text-gray-400 px-3 mb-1 tracking-wide">
+                  Your chats
+                </summary>
+                {isFetching ? (
+                  <ul className="flex flex-col gap-2">
+                    {Array.from({ length: 10 }).map((_, index) => (
+                      <li
+                        key={index}
+                        className="h-9 rounded-xl bg-gray-200 dark:bg-gray-700 animate-pulse"
+                      ></li>
+                    ))}
+                  </ul>
+                ) : (
+                  <ul className="flex flex-col">
+                    {chatList.map((chat) => (
+                      <li
+                        key={chat.id}
+                        onClick={() => {
+                          setChatId(chat.id);
+                          document.title = `${toTitleCase(chat.title)}`;
+                          fetch(`/api/chat/${chat.id}`)
+                            .then((res) => res.json())
+                            .then((data) => {
+                              setMessages(data.messages);
+                            });
+                        }}
+                        className={`group pl-3 pr-8 relative py-2 text-sm rounded-full cursor-pointer truncate transition-colors ${
+                          chat.id === chatId
+                            ? "bg-[#E8E8E8] dark:bg-[#242424]"
+                            : "hover:bg-[#EFEFEF] dark:hover:bg-[#303030]"
+                        }`}
+                        title={chat.title}
                       >
-                        <div className="flex flex-col gap-1">
-                          <p className="text-base font-semibold">
-                            Delete chat?
-                          </p>
-                          <p className="text-sm text-gray-500 dark:text-gray-400">
-                            This action cannot be undone.
-                          </p>
-                        </div>
-                        <div className="flex gap-3 justify-end">
-                          <button
-                            onClick={() => setShowDeleteDialog(false)}
-                            className="px-4 cursor-pointer py-2 text-sm rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                        {toTitleCase(chat.title) || "New Chat"}
+
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowDeleteDialog(true);
+                          }}
+                          className="absolute cursor-pointer right-0 top-0 h-full w-7 hidden group-hover:flex items-center justify-center rounded hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
+                        >
+                          <EllipsisVertical size={16} />
+                        </button>
+
+                        {/* Delete confirmation dialog — rendered outside the button, e.g. at page root via portal */}
+                        {showDeleteDialog && (
+                          <div
+                            className="fixed inset-0 z-50 bg-[#ffffff13] dark:bg-[#1111111c] flex items-center justify-center"
+                            onClick={() => setShowDeleteDialog(false)} // close on backdrop click
                           >
-                            Cancel
-                          </button>
-                          <button
-                            onClick={async () => {
-                              await fetch(`/api/chat/${chat.id}`, {
-                                method: "DELETE",
-                              });
-                              setChatList((prev) =>
-                                prev.filter((c) => c.id !== chat.id),
-                              );
-                              if (chatId === chat.id) {
-                                setChatId(null);
-                                setMessages([]);
-                                document.title = "ChatNova";
-                              }
-                              setShowDeleteDialog(false);
-                            }}
-                            className="px-4 cursor-pointer py-2 text-sm rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors"
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </div>
+                            <div
+                              className="bg-white dark:bg-[#181818] rounded-xl shadow-md p-6 min-w-80 flex flex-col gap-5"
+                              onClick={(e) => e.stopPropagation()} // prevent closing when clicking inside
+                            >
+                              <div className="flex flex-col gap-1">
+                                <p className="text-base font-semibold">
+                                  Delete chat?
+                                </p>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">
+                                  This will delete{" "}
+                                  <span className="font-bold">
+                                    {chat.title}
+                                  </span>
+                                </p>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">
+                                  This action cannot be undone.
+                                </p>
+                              </div>
+                              <div className="flex gap-3 justify-end">
+                                <button
+                                  onClick={() => setShowDeleteDialog(false)}
+                                  className="px-4 cursor-pointer py-2 text-sm rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                                >
+                                  Cancel
+                                </button>
+                                <button
+                                  onClick={async () => {
+                                    await fetch(`/api/chat/${chat.id}`, {
+                                      method: "DELETE",
+                                    });
+                                    setChatList((prev) =>
+                                      prev.filter((c) => c.id !== chat.id),
+                                    );
+                                    if (chatId === chat.id) {
+                                      setChatId(null);
+                                      setMessages([]);
+                                      document.title = "ChatNova";
+                                    }
+                                    setShowDeleteDialog(false);
+                                  }}
+                                  className="px-4 cursor-pointer py-2 text-sm rounded-full bg-[#ff002a] text-white hover:bg-[#911e1b] transition-colors"
+                                >
+                                  Delete
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </details>
+            </div>
+          )}
 
           {session && (
             // FIX 2: Condition was inverted — apply constrained width when NOT collapsed

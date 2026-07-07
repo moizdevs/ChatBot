@@ -1,13 +1,5 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-// to push it to db run commend: npx prisma migrate dev --name init
-
 generator client {
-  provider = "prisma-client"
-  output   = "../lib/generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
@@ -20,17 +12,17 @@ model User {
   name      String?
   email     String   @unique
   imageUrl  String
+  createdAt DateTime @default(now())
   chats     Chat[]   @relation("UserChats")
   memory    Memory[] @relation("UserFacts")
-  createdAt DateTime @default(now())
 }
 
 model Chat {
   id        String    @id @default(uuid())
   userId    String
-  user      User      @relation("UserChats", fields: [userId], references: [id], onDelete: Cascade)
   title     String
   createdAt DateTime  @default(now())
+  user      User      @relation("UserChats", fields: [userId], references: [id], onDelete: Cascade)
   messages  Message[]
 }
 
@@ -39,17 +31,17 @@ model Message {
   role      Role
   content   String
   chatId    String
-  chat      Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
+  chat      Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
 }
 
-model Memory{
+model Memory {
   id        String   @id @default(uuid())
   userId    String
-  user      User      @relation("UserFacts", fields: [userId], references: [id], onDelete: Cascade)
   fact      String
   embedding Json
   createdAt DateTime @default(now())
+  user      User     @relation("UserFacts", fields: [userId], references: [id], onDelete: Cascade)
 }
 
 enum Role {
