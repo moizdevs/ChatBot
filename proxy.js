@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 
 export async function proxy(request) {
-  const token = request.cookies.get("next-auth.session-token")?.value
+  const token = request.cookies.get("__Secure-next-auth.session-token")?.value || request.cookies.get("next-auth.session-token")?.value
   const url = request.nextUrl.clone()
 
   // If user has a token and is trying to access /login, redirect to /
