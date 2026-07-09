@@ -346,7 +346,7 @@ const Home = () => {
 
       {/* Sidebar for mobile */}
       {mobileSidebar && (
-        <div className="w-[52%] fixed z-20 left sidebar-scrollable max-[900]:block hidden overflow-y-auto border-r dark:border-r-[#303030] font-normal bg-[#F9F9F9] dark:bg-[#181818]  transition-all duration-200 shrink-0">
+        <div className="w-[65%] rounded-tr-3xl rounded-br-3xl fixed z-20 left sidebar-scrollable max-[900]:block hidden overflow-y-auto border-r dark:border-r-[#303030] font-normal bg-[#F9F9F9] dark:bg-[#181818]  transition-all duration-200 shrink-0">
           <div
             className={`header bg-[#F9F9F9] dark:bg-[#181818] top-0 px-2 py-1 sticky flex justify-between items-center`}
           >
@@ -375,6 +375,7 @@ const Home = () => {
                       if (item.label === "New chat") {
                         setMessages([]);
                         setChatId(null);
+                        setmobileSidebar(false);
                         document.title = "ChatNova";
                       }
                     }}
@@ -413,6 +414,7 @@ const Home = () => {
                         key={chat.id}
                         onClick={() => {
                           setChatId(chat.id);
+                          setmobileSidebar(false);
                           document.title = `${toTitleCase(chat.title)}`;
                           fetch(`/api/chat/${chat.id}`)
                             .then((res) => res.json())
@@ -505,7 +507,7 @@ const Home = () => {
             // FIX 2: Condition was inverted — apply constrained width when NOT collapsed
             <div
               className="logoutBox flex items-center justify-between hover:bg-gray-200 dark:hover:bg-[#111] bg-[#F9F9F9] dark:bg-[#181818] p-2 rounded-full fixed bottom-0 ${
-                w-[51%]"
+                w-[62%]"
             >
               <div className="flex gap-2">
                 <img
@@ -550,7 +552,7 @@ const Home = () => {
             <span className="min-[900px]:pl-7 text-lg">ChatNova</span>
           </div>
 
-          <span className="text-sm flex items-center gap-1 text-[#5D5BD0] font-semibold bg-[#F1F1FB] dark:bg-[#373669] dark:text-[#DBDAF5] border border-[#f1f1fb] dark:border-[#222323] rounded-full px-3 py-1 tracking-wide">
+          <span className="text-sm flex items-center gap-1 text-[#5D5BD0] font-semibold bg-[#F1F1FB] dark:bg-[#373669] dark:text-[#DBDAF5] border border-[#f1f1fb] dark:border-[#222323] rounded-full px-3 py-1 tracking-wide max-[480px]:hidden">
             ✦ Get plus <X size={12} />
           </span>
 
@@ -570,7 +572,7 @@ const Home = () => {
           {messages.length === 0 && !loading && (
             <div className="flex flex-col items-center justify-center h-10/12 text-gray-400 gap-2">
               <img src="/logo.svg" className="h-12 w-12 invert" alt="" />
-              <p className="text-base">
+              <p className="text-base text-center">
                 Hey, {session?.user.name}. Ready to dive in?
               </p>
             </div>
