@@ -35,14 +35,14 @@ const Home = () => {
   const thisRef = useRef();
   const chatRef = useRef(null);
   const [collapsed, setCollapsed] = useState(false);
-  const [copiedId, setCopiedId] = useState();
+  const [copiedId, setCopiedId] = useState(null);
   const [mobileSidebar, setmobileSidebar] = useState(false);
   const sidebarRef = useRef(null); // add this
   const pageRef = useRef(1);
   const hasMoreRef = useRef(true); // ADD
   const isFetchingRef = useRef(false); // Add
   const [isFetching, setIsFetching] = useState(false);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleteDialogChatId, setDeleteDialogChatId] = useState(null);
 
   const fetchChatsHistory = async (userId) => {
     if (!userId) return;
@@ -243,22 +243,30 @@ const Home = () => {
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          setShowDeleteDialog(true);
+                          setDeleteDialogChatId(chat.id); // was: setShowDeleteDialog(true)
                         }}
                         className="absolute cursor-pointer right-0 top-0 h-full w-7 hidden group-hover:flex items-center justify-center rounded hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
                       >
                         <EllipsisVertical size={16} />
                       </button>
+                    </li>
+                  ))}
 
-                      {/* Delete confirmation dialog — rendered outside the button, e.g. at page root via portal */}
-                      {showDeleteDialog && (
+                  {/* Render ONCE, outside the map, not once per <li> */}
+                  {deleteDialogChatId &&
+                    (() => {
+                      const chat = chatList.find(
+                        (c) => c.id === deleteDialogChatId,
+                      );
+                      if (!chat) return null;
+                      return (
                         <div
                           className="fixed inset-0 z-50 bg-[#ffffff13] dark:bg-[#1111111c] flex items-center justify-center"
-                          onClick={() => setShowDeleteDialog(false)} // close on backdrop click
+                          onClick={() => setDeleteDialogChatId(null)}
                         >
                           <div
                             className="bg-white dark:bg-[#181818] rounded-xl shadow-md p-6 min-w-80 flex flex-col gap-5"
-                            onClick={(e) => e.stopPropagation()} // prevent closing when clicking inside
+                            onClick={(e) => e.stopPropagation()}
                           >
                             <div className="flex flex-col gap-1">
                               <p className="text-base font-semibold">
@@ -266,7 +274,9 @@ const Home = () => {
                               </p>
                               <p className="text-sm text-gray-500 dark:text-gray-400">
                                 This will delete{" "}
-                                <span className="font-bold text-gray-200">{chat.title}</span>
+                                <span className="font-bold text-gray-600 dark:text-gray-200">
+                                  {chat.title}
+                                </span>
                               </p>
                               <p className="text-sm text-gray-500 dark:text-gray-400">
                                 This action cannot be undone.
@@ -274,7 +284,7 @@ const Home = () => {
                             </div>
                             <div className="flex gap-3 justify-end">
                               <button
-                                onClick={() => setShowDeleteDialog(false)}
+                                onClick={() => setDeleteDialogChatId(null)}
                                 className="px-4 cursor-pointer py-2 text-sm rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
                               >
                                 Cancel
@@ -292,7 +302,7 @@ const Home = () => {
                                     setMessages([]);
                                     document.title = "ChatNova";
                                   }
-                                  setShowDeleteDialog(false);
+                                  setDeleteDialogChatId(null);
                                 }}
                                 className="px-4 cursor-pointer py-2 text-sm rounded-full bg-[#ff002a] text-white hover:bg-[#911e1b] transition-colors"
                               >
@@ -301,9 +311,8 @@ const Home = () => {
                             </div>
                           </div>
                         </div>
-                      )}
-                    </li>
-                  ))}
+                      );
+                    })()}
                 </ul>
               )}
             </details>
@@ -414,7 +423,6 @@ const Home = () => {
                         key={chat.id}
                         onClick={() => {
                           setChatId(chat.id);
-                          setmobileSidebar(false);
                           document.title = `${toTitleCase(chat.title)}`;
                           fetch(`/api/chat/${chat.id}`)
                             .then((res) => res.json())
@@ -434,22 +442,30 @@ const Home = () => {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            setShowDeleteDialog(true);
+                            setDeleteDialogChatId(chat.id); // was: setShowDeleteDialog(true)
                           }}
                           className="absolute cursor-pointer right-0 top-0 h-full w-7 hidden group-hover:flex items-center justify-center rounded hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
                         >
                           <EllipsisVertical size={16} />
                         </button>
+                      </li>
+                    ))}
 
-                        {/* Delete confirmation dialog — rendered outside the button, e.g. at page root via portal */}
-                        {showDeleteDialog && (
+                    {/* Render ONCE, outside the map, not once per <li> */}
+                    {deleteDialogChatId &&
+                      (() => {
+                        const chat = chatList.find(
+                          (c) => c.id === deleteDialogChatId,
+                        );
+                        if (!chat) return null;
+                        return (
                           <div
                             className="fixed inset-0 z-50 bg-[#ffffff13] dark:bg-[#1111111c] flex items-center justify-center"
-                            onClick={() => setShowDeleteDialog(false)} // close on backdrop click
+                            onClick={() => setDeleteDialogChatId(null)}
                           >
                             <div
                               className="bg-white dark:bg-[#181818] rounded-xl shadow-md p-6 min-w-80 flex flex-col gap-5"
-                              onClick={(e) => e.stopPropagation()} // prevent closing when clicking inside
+                              onClick={(e) => e.stopPropagation()}
                             >
                               <div className="flex flex-col gap-1">
                                 <p className="text-base font-semibold">
@@ -457,7 +473,7 @@ const Home = () => {
                                 </p>
                                 <p className="text-sm text-gray-500 dark:text-gray-400">
                                   This will delete{" "}
-                                  <span className="font-bold">
+                                  <span className="font-bold text-gray-600 dark:text-gray-200">
                                     {chat.title}
                                   </span>
                                 </p>
@@ -467,7 +483,7 @@ const Home = () => {
                               </div>
                               <div className="flex gap-3 justify-end">
                                 <button
-                                  onClick={() => setShowDeleteDialog(false)}
+                                  onClick={() => setDeleteDialogChatId(null)}
                                   className="px-4 cursor-pointer py-2 text-sm rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
                                 >
                                   Cancel
@@ -485,7 +501,7 @@ const Home = () => {
                                       setMessages([]);
                                       document.title = "ChatNova";
                                     }
-                                    setShowDeleteDialog(false);
+                                    setDeleteDialogChatId(null);
                                   }}
                                   className="px-4 cursor-pointer py-2 text-sm rounded-full bg-[#ff002a] text-white hover:bg-[#911e1b] transition-colors"
                                 >
@@ -494,9 +510,8 @@ const Home = () => {
                               </div>
                             </div>
                           </div>
-                        )}
-                      </li>
-                    ))}
+                        );
+                      })()}
                   </ul>
                 )}
               </details>
@@ -654,6 +669,7 @@ const Home = () => {
                         setCopiedId(msg.id);
                         navigator.clipboard.writeText(msg.content);
                         setTimeout(() => setCopiedId(null), 500);
+                        ` `;
                       }}
                       size={18}
                     />
